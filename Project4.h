@@ -16,6 +16,9 @@
 #define QLEN 1
 #define COMMAND_POS 0
 #define ARG_OFFSET 2
+#define MAX_DIGITS 4 // increased to allow \0
+#define DIGIT_OFFSET 4
+#define MAX_ENTRY_LEN 512
 
 #define WRITE_LOG '1'
 #define READ_LOG '2'
@@ -34,17 +37,14 @@ void startacceptingComms(char *port);
 void *zmalloc(unsigned int size);
 int isnumber(char *num);
 void writeLog(char *message);
+void readAndPrintLog(int sd, char buffer[], int bytes);
+int convertIndexStr(char *index);
 
-typedef struct entry {
-  int created;
-  int lastEdited;
-  char *message;
-} Entry;
 
 typedef struct clog {
-  Entry *logs[MAX_CLOG_SIZE];
+  char *logs[MAX_CLOG_SIZE];
   unsigned short numLogs;
-  Entry *mostRecentLog;
+  char *mostRecentLog;
 } CaptainLog;
 
 

@@ -30,8 +30,6 @@ int main(int argc, char *argv[])
 
   setUpSockets(argv[HOST_POS], argv[PORT_POS_C]);
 
-  // if (connect (sd, (struct sockaddr *)&sin, sizeof(sin)) < 0)
-  //     errexit ("cannot connect", NULL);
 
   while (TRUE)
   {
@@ -76,8 +74,6 @@ int main(int argc, char *argv[])
           continue;
         }
       }
-      if (write(sd, buffer, BUFLEN - 1) < 0)
-        errexit("error in writing to socket: %s", buffer);
     }
     else
     {
@@ -86,6 +82,27 @@ int main(int argc, char *argv[])
       close(sd);
       exit(1);
     }
+
+    if (write(sd, buffer, BUFLEN - 1) < 0)
+      errexit("error in writing to socket: %s", buffer);
+
+    switch (commandNo)
+    {
+      case READ_LOG:
+        memset(buffer, 0x0, BUFLEN);
+        readAndPrintLog(sd, buffer, BUFLEN - 1);
+        break;
+
+      case CLEAR_LOG:
+        break;
+
+      case NUM_LOG:
+        break;
+
+      case LAST_MADE:
+        break;
+    }
+
     free(commandArgs);
   }
   printf("exiting");
@@ -148,4 +165,13 @@ void *zmalloc(unsigned int size)
 
   memset(p, 0x0, size);
   return p;
+}
+
+void readAndPrintLog(int sd, char buffer[], int bytes)
+{
+  int r;
+  if ((r = read(sd, buffer, bytes)) < 0)
+    errexit("error in reading bytes, exiting", NULL);
+
+  printf("%s\n", buffer);
 }

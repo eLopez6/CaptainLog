@@ -33,6 +33,10 @@ int main(int argc, char *argv [])
 
   setUpSocketsServer(argv[PORT_POS]);
 
+  c_log.numLogs = 0;
+  c_log.mostRecentLog = NULL;
+
+
   // Accepts connections
   while(TRUE)
   {
@@ -42,6 +46,7 @@ int main(int argc, char *argv [])
     //Reads from socket
     while (read(sd2, buffer, BUFLEN - 1) > 0)
     {
+      int r_index;
       char commandNo;
       char *commandArgs;
 
@@ -60,6 +65,9 @@ int main(int argc, char *argv [])
           break;
 
         case READ_LOG:
+          r_index = convertIndexStr(buffer);
+          if ((c_log.logs[r_index] != NULL))
+            write(sd2, c_log.logs[r_index], strlen(c_log.logs[r_index]));
           break;
 
         case CLEAR_LOG:
@@ -131,17 +139,6 @@ void startacceptingComms(char *port)
     errexit ("error accepting connection", NULL);
 }
 
-Entry *createLog(char *message)
-{
-  Entry *newEntry;
-
-  newEntry = (Entry *)zmalloc(sizeof(Entry));
-  newEntry->created = (int)time(NULL);
-  newEntry->lastEdited = newEntry->created;
-  newEntry->message = message;
-
-  return newEntry;
-}
 
 void writeLog(char *message)
 {
@@ -151,15 +148,13 @@ void writeLog(char *message)
     exit(EXIT_FAILURE);
   }
 
-  c_log.logs[c_log.numLogs] = createLog(message);
+  c_log.logs[c_log.numLogs] = (char *)zmalloc(MAX_ENTRY_LEN);
+  strncpy(c_log.logs[c_log.numLogs], message, BUFLEN);
   c_log.mostRecentLog = c_log.logs[c_log.numLogs];
   c_log.numLogs++;
 
-
   printf("Number of logs in the log after writing: %u\n", c_log.numLogs);
 }
-
-
 
 int usage (char *progname)
 {
@@ -186,4 +181,14 @@ void *zmalloc(unsigned int size)
 
   memset(p, 0x0, size);
   return p;
+}
+
+int convertIndexStr(char *index)
+{
+  int i;
+  char *indexStr = (char *)zmalloc(MAX_DIGITS);
+  strncpy(indexStr, index + ARG_OFFSET, DIGIT_OFFSET);
+  i = atoi(indexStr);
+  free(indexStr);
+  return i;
 }
