@@ -95,39 +95,32 @@ int isnumber(char *num)
   return TRUE;
 }
 
-
-// void archiveLog()
-// {
-//   int i;
-//   int fd;
-//   const char *archiveCheck =  "\n|||| ARCHIVE PROCESS COMPLETED ||||\n\n";
-//
-//   if ((fd = open("./CaptainLogArchive.txt", O_APPEND, PERMS)) < 0)
-//     fd = creat("./CaptainLogArchive.txt", PERMS);
-//   else {
-//     printf("shoudl append \n");
-//   }
-//
-//   for (i = 0; i < c_log.numLogs; i++)
-//   {
-//     write(fd, c_log.logs[i], strlen(c_log.logs[i]));
-//     write(fd, "\n", 1);
-//   }
-//   write(fd, archiveCheck, strlen(archiveCheck));
-//   close(fd);
-// }
-
 void archiveLog()
 {
   int i;
   FILE *archive;
 
-  archive = fopen("./CaptainLogArchive.txt", "w");
+  time_t now;
+  struct tm *now_tm;
+  char *cur_time = (char *)zmalloc(MAX_CHAR_DATE);
+  char *filename = (char *)zmalloc(FILENAME_LEN);
+
+  time(&now);
+
+  now_tm = localtime(&now);
+  strncpy(filename, FILENAME, FILENAME_LEN);
+  strftime(cur_time, MAX_CHAR_DATE, "%Y-%m-%d %H:%M:%S", now_tm);
+  strncat(filename, cur_time, MAX_CHAR_DATE);
+  strncat(filename, ".txt\0", FILE_EXT_LEN);
+
+  archive = fopen(filename, "w");
   for (i = 0; i < c_log.numLogs; i++)
   {
       fprintf(archive, "%s\n", c_log.logs[i]);
   }
+  free(cur_time);
   fclose(archive);
+  printf("Log archived as %s\n", filename);
 }
 
 void safeWrite(int sd, char *arg, int bytes)

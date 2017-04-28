@@ -22,6 +22,10 @@
 #define DELAY_SEC 1
 #define DECIMAL_RADIX 10
 #define PERMS 0777
+#define MAX_CHAR_DATE 20
+#define FILENAME_LEN 21
+#define FILENAME "./CaptainLogArchive "
+#define FILE_EXT_LEN 5
 
 #define WRITE_LOG '1'
 #define READ_LOG '2'
