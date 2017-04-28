@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
     }
 
     //ensures only valid commands get processed (and quit)
-    if (commandNo <= LAST_MADE && commandNo >= WRITE_LOG)
+    if (commandNo <= ARCHIVE_LOG && commandNo >= WRITE_LOG)
     {
       // checks if the command is write or read, which require arguments
       if (commandNo == WRITE_LOG || commandNo == READ_LOG)
@@ -99,6 +99,12 @@ int main(int argc, char *argv[])
           if (test_i <= MAX_INDEX)
             safeWrite(sd, commandArgs, strlen(commandArgs));
         }
+        else
+          errexit("Invalid index\n", NULL);
+
+
+
+
         readFromSocket(sd, buffer, MAX_ENTRY_LEN);
         break;
 
@@ -112,11 +118,16 @@ int main(int argc, char *argv[])
 
       case LAST_MADE:
         readFromSocket(sd, buffer, MAX_ENTRY_LEN);
+        break;
+
+      case ARCHIVE_LOG:
+        printf("Archive Log command sent\n");
+        break;
 
     }
     free(commandArgs);
   }
-  printf("exiting");
+  printf("exiting\n");
   return TRUE;
 }
 

@@ -21,13 +21,15 @@
 #define MAX_INDEX 364
 #define DELAY_SEC 1
 #define DECIMAL_RADIX 10
+#define PERMS 0777
 
 #define WRITE_LOG '1'
 #define READ_LOG '2'
 #define CLEAR_LOG '3'
 #define NUM_LOG '4'
 #define LAST_MADE '5'
-#define QUIT '6'
+#define ARCHIVE_LOG '6'
+#define QUIT '7'
 
 
 
@@ -48,6 +50,7 @@ void sendLog();
 void writeLogEntry(char buffer[]);
 void safeWrite(int sd, char *arg, int bytes);
 void safeRead(int sd, char *dest, int bytes);
+void archiveLog();
 
 
 typedef struct clog {

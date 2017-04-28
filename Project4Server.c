@@ -43,7 +43,7 @@ int main(int argc, char *argv [])
     startacceptingComms(argv[PORT_POS]);
     memset(buffer, 0x0, BUFLEN);
 
-    //Reads from socket
+    //Reads the command from the  socket
     while (read(sd2, buffer, 1) > 0)
     {
       switch (buffer[COMMAND_POS])
@@ -68,6 +68,9 @@ int main(int argc, char *argv [])
           safeWrite(sd2, c_log.mostRecentLog, strlen(c_log.mostRecentLog));
           break;
 
+        case ARCHIVE_LOG:
+          archiveLog();
+
         default:
           errorMess = "invalid command\n";
           if (write (sd2, errorMess, strlen(errorMess)) < 0)
@@ -90,6 +93,41 @@ int isnumber(char *num)
       return FALSE;
 
   return TRUE;
+}
+
+
+// void archiveLog()
+// {
+//   int i;
+//   int fd;
+//   const char *archiveCheck =  "\n|||| ARCHIVE PROCESS COMPLETED ||||\n\n";
+//
+//   if ((fd = open("./CaptainLogArchive.txt", O_APPEND, PERMS)) < 0)
+//     fd = creat("./CaptainLogArchive.txt", PERMS);
+//   else {
+//     printf("shoudl append \n");
+//   }
+//
+//   for (i = 0; i < c_log.numLogs; i++)
+//   {
+//     write(fd, c_log.logs[i], strlen(c_log.logs[i]));
+//     write(fd, "\n", 1);
+//   }
+//   write(fd, archiveCheck, strlen(archiveCheck));
+//   close(fd);
+// }
+
+void archiveLog()
+{
+  int i;
+  FILE *archive;
+
+  archive = fopen("./CaptainLogArchive.txt", "w");
+  for (i = 0; i < c_log.numLogs; i++)
+  {
+      fprintf(archive, "%s\n", c_log.logs[i]);
+  }
+  fclose(archive);
 }
 
 void safeWrite(int sd, char *arg, int bytes)
