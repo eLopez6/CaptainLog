@@ -143,7 +143,7 @@ void setUpSockets(char *hostname, char *port)
 {
   hinfo = gethostbyname (hostname);
   if (hinfo == NULL)
-      errexit ("cannot find name: %s", port);
+      errexit ("cannot find name: %s", hostname);
 
   /* set endpoint information */
   memset ((char *)&sin, 0x0, sizeof(sin));

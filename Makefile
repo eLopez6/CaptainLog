@@ -18,4 +18,3 @@ proj4d: Project4Server.o
 
 clean:
 	rm -f *.o
-	rm CaptainLogArchive*.txt 
