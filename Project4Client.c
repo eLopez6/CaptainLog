@@ -30,7 +30,6 @@ int main(int argc, char *argv[])
 
   setUpSockets(argv[HOST_POS], argv[PORT_POS_C]);
 
-
   while (TRUE)
   {
     int test_i;
@@ -85,14 +84,12 @@ int main(int argc, char *argv[])
     }
 
     //Writes command char to server so it can process next read correctly
-    if (write(sd, &commandNo, 1) < 0)
-      errexit("error in writing to socket: %s", buffer);
+    safeWrite(sd, &commandNo, 1);
 
     switch (commandNo)
     {
       case WRITE_LOG:
-        if (write(sd, commandArgs, strlen(commandArgs)) < 0)
-          errexit("error writing to captain's log\n", NULL);
+        safeWrite(sd, commandArgs, strlen(commandArgs));
         break;
 
       case READ_LOG:
@@ -100,7 +97,7 @@ int main(int argc, char *argv[])
         {
           test_i = convertIndexStr(commandArgs);
           if (test_i <= MAX_INDEX)
-            write(sd, commandArgs, strlen(commandArgs));
+            safeWrite(sd, commandArgs, strlen(commandArgs));
         }
         readFromSocket(sd, buffer, MAX_ENTRY_LEN);
         break;
@@ -117,8 +114,6 @@ int main(int argc, char *argv[])
         readFromSocket(sd, buffer, MAX_ENTRY_LEN);
 
     }
-
-
     free(commandArgs);
   }
   printf("exiting");
@@ -187,10 +182,7 @@ void readFromSocket(int sd, char buffer[], int bytes)
 {
   memset(buffer, 0x0, BUFLEN);
   sleep(DELAY_SEC);
-
-  if (read(sd, buffer, bytes) < 0)
-    errexit("error reading sd for read log", NULL);
-
+  safeRead(sd, buffer, bytes);
   printf("%s\n", buffer);
 }
 
@@ -202,4 +194,16 @@ int convertIndexStr(char *index)
   i = atoi(indexStr);
   free(indexStr);
   return i;
+}
+
+void safeWrite(int sd, char *arg, int bytes)
+{
+  if (write(sd, arg, bytes) < 0)
+    errexit("error writing, exiting\n", NULL);
+}
+
+void safeRead(int sd, char *dest, int bytes)
+{
+  if (read(sd, dest, bytes) < 0)
+    errexit("error reading, exiting\n", NULL);
 }

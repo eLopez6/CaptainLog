@@ -46,12 +46,7 @@ int main(int argc, char *argv [])
     //Reads from socket
     while (read(sd2, buffer, 1) > 0)
     {
-      char commandNo;
-
-      // Reads into command struct the contents of the read
-      commandNo = buffer[COMMAND_POS];
-
-      switch (commandNo)
+      switch (buffer[COMMAND_POS])
       {
         case WRITE_LOG:
           writeLogEntry(buffer);
@@ -70,7 +65,7 @@ int main(int argc, char *argv [])
           break;
 
         case LAST_MADE:
-          write(sd2, c_log.mostRecentLog, strlen(c_log.mostRecentLog));
+          safeWrite(sd2, c_log.mostRecentLog, strlen(c_log.mostRecentLog));
           break;
 
         default:
@@ -79,7 +74,6 @@ int main(int argc, char *argv [])
             errexit ("invalid command", NULL);
           break;
       }
-
     }
     close(sd2);
   }
@@ -98,10 +92,17 @@ int isnumber(char *num)
   return TRUE;
 }
 
-// int safeWrite(int sd, char *arg, int bytes)
-// {
-//
-// }
+void safeWrite(int sd, char *arg, int bytes)
+{
+  if (write(sd, arg, bytes) < 0)
+    errexit("error writing, exiting\n", NULL);
+}
+
+void safeRead(int sd, char *dest, int bytes)
+{
+  if (read(sd, dest, bytes) < 0)
+    errexit("error reading, exiting\n", NULL);
+}
 
 void setUpSocketsServer(char *port)
 {
@@ -159,19 +160,17 @@ void sendLog()
   int read_index;
   char *commandArgs = (char *)zmalloc(MAX_DIGITS);
 
-  if (read(sd2, commandArgs, MAX_DIGITS) < 0)
-    errexit("error reading for READ_LOG", NULL);
+  safeRead(sd2, commandArgs, MAX_DIGITS);
   read_index = atoi(commandArgs);
 
   if ((c_log.logs[read_index] != NULL))
-    write(sd2, c_log.logs[read_index], strlen(c_log.logs[read_index]));
+    safeWrite(sd2, c_log.logs[read_index], strlen(c_log.logs[read_index]));
   else
-    write(sd2, "no log for that entry", MAX_ENTRY_LEN);
+    if (write(sd2, "no log for that entry", MAX_ENTRY_LEN) < 0)
+      errexit("error in writing to sd\n", NULL);
 
   free(commandArgs);
 }
-
-
 
 /* K & R Reverse function found on pg. 62 */
 void reverse(char s[])
@@ -203,8 +202,8 @@ void entriesInLog()
 {
   char *numString = (char *)zmalloc(MAX_DIGITS);
   itoa(c_log.numLogs, numString);
-  if (write(sd2, numString, strlen(numString)) < 0)
-    errexit("error writing number of entries in the log\n", NULL);
+  safeWrite(sd2, numString, strlen(numString));
+  free(numString);
 }
 
 void clearTheLog()

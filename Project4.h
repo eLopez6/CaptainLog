@@ -46,6 +46,8 @@ void clearTheLog();
 void entriesInLog();
 void sendLog();
 void writeLogEntry(char buffer[]);
+void safeWrite(int sd, char *arg, int bytes);
+void safeRead(int sd, char *dest, int bytes);
 
 
 typedef struct clog {
