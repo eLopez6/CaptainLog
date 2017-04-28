@@ -46,9 +46,7 @@ int main(int argc, char *argv [])
     //Reads from socket
     while (read(sd2, buffer, 1) > 0)
     {
-      int r_index;
       char commandNo;
-      char *commandArgs;
 
       // Reads into command struct the contents of the read
       commandNo = buffer[COMMAND_POS];
@@ -56,41 +54,23 @@ int main(int argc, char *argv [])
       switch (commandNo)
       {
         case WRITE_LOG:
-          commandArgs = (char *)zmalloc(BUFLEN);
-          memset(buffer, 0x0, BUFLEN);
-
-          if (read(sd2, buffer, BUFLEN - 1) > 0)
-            strncpy(commandArgs, buffer, BUFLEN - 1);  // copies message and adds \0
-          else
-            errexit("error reading WRITE_LOG args", NULL);
-
-          if (strlen(commandArgs) > 0)
-            writeLog(commandArgs);
-
-          free(commandArgs);
+          writeLogEntry(buffer);
           break;
 
         case READ_LOG:
-          commandArgs = (char *)zmalloc(MAX_DIGITS);
-          if (read(sd2, commandArgs, MAX_DIGITS) < 0)
-            errexit("error reading for READ_LOG", NULL);
-
-          r_index = atoi(commandArgs);
-
-          if ((c_log.logs[r_index] != NULL))
-            write(sd2, c_log.logs[r_index], strlen(c_log.logs[r_index]));
-          else
-            write(sd2, "no log for that entry", MAX_LOG_LENGTH);
-
+          sendLog();
           break;
 
         case CLEAR_LOG:
+          clearTheLog();
           break;
 
         case NUM_LOG:
+          entriesInLog();
           break;
 
         case LAST_MADE:
+          write(sd2, c_log.mostRecentLog, strlen(c_log.mostRecentLog));
           break;
 
         default:
@@ -117,6 +97,11 @@ int isnumber(char *num)
 
   return TRUE;
 }
+
+// int safeWrite(int sd, char *arg, int bytes)
+// {
+//
+// }
 
 void setUpSocketsServer(char *port)
 {
@@ -153,6 +138,86 @@ void startacceptingComms(char *port)
     errexit ("error accepting connection", NULL);
 }
 
+void writeLogEntry(char buffer[])
+{
+  char *commandArgs = (char *)zmalloc(BUFLEN);
+  memset(buffer, 0x0, BUFLEN);
+
+  if (read(sd2, buffer, BUFLEN - 1) > 0)
+    strncpy(commandArgs, buffer, BUFLEN - 1);  // copies message and adds \0
+  else
+    errexit("error reading WRITE_LOG args", NULL);
+
+  if (strlen(commandArgs) > 0)
+    writeLog(commandArgs);
+
+  free(commandArgs);
+}
+
+void sendLog()
+{
+  int read_index;
+  char *commandArgs = (char *)zmalloc(MAX_DIGITS);
+
+  if (read(sd2, commandArgs, MAX_DIGITS) < 0)
+    errexit("error reading for READ_LOG", NULL);
+  read_index = atoi(commandArgs);
+
+  if ((c_log.logs[read_index] != NULL))
+    write(sd2, c_log.logs[read_index], strlen(c_log.logs[read_index]));
+  else
+    write(sd2, "no log for that entry", MAX_ENTRY_LEN);
+
+  free(commandArgs);
+}
+
+
+
+/* K & R Reverse function found on pg. 62 */
+void reverse(char s[])
+{
+  int c, i, j;
+
+  for (i = 0, j = strlen(s) - 1; i < j; i++)
+  {
+    c = s[i];
+    s[i] = s[j];
+    s[j] = c;
+  }
+}
+
+/* K & R itoa function found on pg 64 */
+void itoa(int n, char s[])
+{
+  int i;
+
+  i = 0;
+  do {
+    s[i++] = n % DECIMAL_RADIX + '0';
+  } while ((n /= DECIMAL_RADIX) > 0);
+  s[i] = '\0';
+  reverse(s);
+}
+
+void entriesInLog()
+{
+  char *numString = (char *)zmalloc(MAX_DIGITS);
+  itoa(c_log.numLogs, numString);
+  if (write(sd2, numString, strlen(numString)) < 0)
+    errexit("error writing number of entries in the log\n", NULL);
+}
+
+void clearTheLog()
+{
+  int i;
+  printf("Clearing the Captain's Log\n");
+
+  for (i = 0; i < MAX_CLOG_SIZE; i++)
+    if (c_log.logs[i] != NULL)
+      c_log.logs[i] = NULL;
+  c_log.numLogs = 0;
+  c_log.mostRecentLog = NULL;
+}
 
 void writeLog(char *message)
 {

@@ -6,7 +6,6 @@
 #define ERROR 0
 #define PROTOCOL "tcp"
 #define BUFLEN 1024
-#define MAX_LOG_LENGTH 500
 #define MAX_CLOG_SIZE 365
 #define PORT_POS 1 // for server
 #define HOST_POS 1
@@ -21,6 +20,7 @@
 #define MAX_ENTRY_LEN 512
 #define MAX_INDEX 364
 #define DELAY_SEC 1
+#define DECIMAL_RADIX 10
 
 #define WRITE_LOG '1'
 #define READ_LOG '2'
@@ -41,6 +41,11 @@ int isnumber(char *num);
 void writeLog(char *message);
 void readAndPrintLog(int sd, char buffer[], int bytes);
 int convertIndexStr(char *index);
+void readFromSocket(int sd, char buffer[], int bytes);
+void clearTheLog();
+void entriesInLog();
+void sendLog();
+void writeLogEntry(char buffer[]);
 
 
 typedef struct clog {

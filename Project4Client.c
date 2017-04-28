@@ -60,7 +60,6 @@ int main(int argc, char *argv[])
     else
     {
       commandArgs = (char *)zmalloc(BUFLEN);
-      // commandArgs = strtok(buffer, "\n");  // removes \n from argumetns
       strncpy(commandArgs, strtok(buffer + ARG_OFFSET, "\n"), BUFLEN); // copies the argument
     }
 
@@ -92,7 +91,8 @@ int main(int argc, char *argv[])
     switch (commandNo)
     {
       case WRITE_LOG:
-        write(sd, commandArgs, strlen(commandArgs));
+        if (write(sd, commandArgs, strlen(commandArgs)) < 0)
+          errexit("error writing to captain's log\n", NULL);
         break;
 
       case READ_LOG:
@@ -102,14 +102,20 @@ int main(int argc, char *argv[])
           if (test_i <= MAX_INDEX)
             write(sd, commandArgs, strlen(commandArgs));
         }
-        memset(buffer, 0x0, BUFLEN);
+        readFromSocket(sd, buffer, MAX_ENTRY_LEN);
+        break;
 
-        sleep(DELAY_SEC);
+      case CLEAR_LOG:
+        printf("Log Clear command sent\n");
+        break;
 
-        if (read(sd, buffer, MAX_ENTRY_LEN) < 0)
-          errexit("error reading sd for read log", NULL);
+      case NUM_LOG:
+        readFromSocket(sd, buffer, MAX_ENTRY_LEN);
+        break;
 
-        printf("%s\n", buffer);
+      case LAST_MADE:
+        readFromSocket(sd, buffer, MAX_ENTRY_LEN);
+
     }
 
 
@@ -177,15 +183,16 @@ void *zmalloc(unsigned int size)
   return p;
 }
 
-void readAndPrintLog(int sd, char buffer[], int bytes)
+void readFromSocket(int sd, char buffer[], int bytes)
 {
-  int r;
-  if ((r = read(sd, buffer, bytes)) < 0)
-    errexit("error in reading bytes, exiting", NULL);
+  memset(buffer, 0x0, BUFLEN);
+  sleep(DELAY_SEC);
+
+  if (read(sd, buffer, bytes) < 0)
+    errexit("error reading sd for read log", NULL);
 
   printf("%s\n", buffer);
 }
-
 
 int convertIndexStr(char *index)
 {
