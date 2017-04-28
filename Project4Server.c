@@ -109,7 +109,7 @@ void archiveLog()
 
   now_tm = localtime(&now);
   strncpy(filename, FILENAME, FILENAME_LEN);
-  strftime(cur_time, MAX_CHAR_DATE, "%Y-%m-%d %H:%M:%S", now_tm);
+  strftime(cur_time, MAX_CHAR_DATE, "%Y-%m-%d-%H:%M:%S", now_tm);
   strncat(filename, cur_time, MAX_CHAR_DATE);
   strncat(filename, ".txt\0", FILE_EXT_LEN);
 
