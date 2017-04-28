@@ -19,6 +19,8 @@
 #define MAX_DIGITS 4 // increased to allow \0
 #define DIGIT_OFFSET 4
 #define MAX_ENTRY_LEN 512
+#define MAX_INDEX 364
+#define DELAY_SEC 1
 
 #define WRITE_LOG '1'
 #define READ_LOG '2'

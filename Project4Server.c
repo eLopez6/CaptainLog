@@ -44,7 +44,7 @@ int main(int argc, char *argv [])
     memset(buffer, 0x0, BUFLEN);
 
     //Reads from socket
-    while (read(sd2, buffer, BUFLEN - 1) > 0)
+    while (read(sd2, buffer, 1) > 0)
     {
       int r_index;
       char commandNo;
@@ -57,17 +57,31 @@ int main(int argc, char *argv [])
       {
         case WRITE_LOG:
           commandArgs = (char *)zmalloc(BUFLEN);
-          strncpy(commandArgs, buffer + ARG_OFFSET, BUFLEN - 1);
+          memset(buffer, 0x0, BUFLEN);
+
+          if (read(sd2, buffer, BUFLEN - 1) > 0)
+            strncpy(commandArgs, buffer, BUFLEN - 1);  // copies message and adds \0
+          else
+            errexit("error reading WRITE_LOG args", NULL);
 
           if (strlen(commandArgs) > 0)
             writeLog(commandArgs);
+
           free(commandArgs);
           break;
 
         case READ_LOG:
-          r_index = convertIndexStr(buffer);
+          commandArgs = (char *)zmalloc(MAX_DIGITS);
+          if (read(sd2, commandArgs, MAX_DIGITS) < 0)
+            errexit("error reading for READ_LOG", NULL);
+
+          r_index = atoi(commandArgs);
+
           if ((c_log.logs[r_index] != NULL))
             write(sd2, c_log.logs[r_index], strlen(c_log.logs[r_index]));
+          else
+            write(sd2, "no log for that entry", MAX_LOG_LENGTH);
+
           break;
 
         case CLEAR_LOG:
@@ -149,7 +163,7 @@ void writeLog(char *message)
   }
 
   c_log.logs[c_log.numLogs] = (char *)zmalloc(MAX_ENTRY_LEN);
-  strncpy(c_log.logs[c_log.numLogs], message, BUFLEN);
+  strncpy(c_log.logs[c_log.numLogs], message, MAX_ENTRY_LEN);
   c_log.mostRecentLog = c_log.logs[c_log.numLogs];
   c_log.numLogs++;
 
@@ -181,14 +195,4 @@ void *zmalloc(unsigned int size)
 
   memset(p, 0x0, size);
   return p;
-}
-
-int convertIndexStr(char *index)
-{
-  int i;
-  char *indexStr = (char *)zmalloc(MAX_DIGITS);
-  strncpy(indexStr, index + ARG_OFFSET, DIGIT_OFFSET);
-  i = atoi(indexStr);
-  free(indexStr);
-  return i;
 }

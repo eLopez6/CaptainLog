@@ -33,6 +33,7 @@ int main(int argc, char *argv[])
 
   while (TRUE)
   {
+    int test_i;
     char commandNo;
     char *commandArgs;
 
@@ -59,7 +60,8 @@ int main(int argc, char *argv[])
     else
     {
       commandArgs = (char *)zmalloc(BUFLEN);
-      strncpy(commandArgs, buffer + ARG_OFFSET, BUFLEN); // copies the argument
+      // commandArgs = strtok(buffer, "\n");  // removes \n from argumetns
+      strncpy(commandArgs, strtok(buffer + ARG_OFFSET, "\n"), BUFLEN); // copies the argument
     }
 
     //ensures only valid commands get processed (and quit)
@@ -83,25 +85,33 @@ int main(int argc, char *argv[])
       exit(1);
     }
 
-    if (write(sd, buffer, BUFLEN - 1) < 0)
+    //Writes command char to server so it can process next read correctly
+    if (write(sd, &commandNo, 1) < 0)
       errexit("error in writing to socket: %s", buffer);
 
     switch (commandNo)
     {
+      case WRITE_LOG:
+        write(sd, commandArgs, strlen(commandArgs));
+        break;
+
       case READ_LOG:
+        if (isnumber(commandArgs))
+        {
+          test_i = convertIndexStr(commandArgs);
+          if (test_i <= MAX_INDEX)
+            write(sd, commandArgs, strlen(commandArgs));
+        }
         memset(buffer, 0x0, BUFLEN);
-        readAndPrintLog(sd, buffer, BUFLEN - 1);
-        break;
 
-      case CLEAR_LOG:
-        break;
+        sleep(DELAY_SEC);
 
-      case NUM_LOG:
-        break;
+        if (read(sd, buffer, MAX_ENTRY_LEN) < 0)
+          errexit("error reading sd for read log", NULL);
 
-      case LAST_MADE:
-        break;
+        printf("%s\n", buffer);
     }
+
 
     free(commandArgs);
   }
@@ -174,4 +184,15 @@ void readAndPrintLog(int sd, char buffer[], int bytes)
     errexit("error in reading bytes, exiting", NULL);
 
   printf("%s\n", buffer);
+}
+
+
+int convertIndexStr(char *index)
+{
+  int i;
+  char *indexStr = (char *)zmalloc(MAX_DIGITS);
+  strncpy(indexStr, index + ARG_OFFSET, DIGIT_OFFSET);
+  i = atoi(indexStr);
+  free(indexStr);
+  return i;
 }
