@@ -74,6 +74,14 @@ int main(int argc, char *argv[])
           continue;
         }
       }
+      else
+      {
+        if (commandArgs != NULL)
+        {
+          printf("that command requires no arguments\n");
+          continue;
+        }
+      }
     }
     else
     {

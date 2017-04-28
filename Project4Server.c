@@ -263,6 +263,12 @@ void writeLog(char *message)
   c_log.numLogs++;
 
   printf("Number of logs in the log after writing: %u\n", c_log.numLogs);
+  if (c_log.numLogs == MAX_CLOG_SIZE)
+  {
+    archiveLog();
+    clearTheLog();
+  }
+
 }
 
 int usage (char *progname)
