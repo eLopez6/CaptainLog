@@ -1,0 +1,5 @@
+Practically everything relevant to the programs are in the PDF.
+
+Multiple clients cannot write to the server. Which is what I wanted. If another
+client attempts a connection to the server, it will connect but its commands
+won't be processed. And it doesn't see output from the server either.  
